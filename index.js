@@ -1,3 +1,4 @@
+
 function returnSelection() {
     return new Promise((resolve, reject) => {
         if (window.getSelection) {
@@ -13,7 +14,6 @@ function returnSelection() {
 async function collectSelection() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs.length === 0) {
-            console.error("No active tab found");
             return;
         }
 
@@ -25,23 +25,17 @@ async function collectSelection() {
                 console.error("Failed to execute script:", chrome.runtime.lastError);
                 return;
             }
-            
-            const selectedText = results[0].result;
-            console.log("Selected text:", selectedText);
-            display.innerText = selectedText || "No text selected";
-            value = selectedText || "No text selected"
+            const selection = results[0].result
+            display.innerText = selection || "No text selected";
+            value = selection || "No text selected"
         });
     });
 }
 
 async function pasteIntoChatGPT(message) {
-    const tabs = await chrome.tabs.query({ url: "https://chatgpt.com/" });
+    let tabs = await chrome.tabs.query({ url: "https://chatgpt.com/*" });
 
-    if (tabs.length === 0) {
-        console.error("ChatGPT tab not found");
-        return;
-    }
-
+   
     chrome.scripting.executeScript({
         target: { tabId: tabs[0].id }, 
         func: (msg) => {
@@ -50,11 +44,12 @@ async function pasteIntoChatGPT(message) {
                 textArea.innerHTML = msg; 
                 textArea.focus();
             } else {
-                console.error("Text area not found");
+                console.error("Text area not found");  
             }
         },
         args: [message] 
-    });
+   
+    })
 }
 
 
@@ -62,15 +57,12 @@ async function pasteIntoChatGPT(message) {
 
 
 
-
+const delay = ms => new Promise(res => setTimeout(res, ms));
 const display = document.getElementById("display");
 let value = 'hello'; 
 
-document.getElementById("createGPT").addEventListener("click", () => {
-    console.log(value)
-    pasteIntoChatGPT(value);
-});
-
 document.getElementById("load").addEventListener("click", () => {
     collectSelection(value)
+    //pasteIntoChatGPT(value)
+    //console.log('finished attempt to paste into chatgpt')
 });
