@@ -37,15 +37,30 @@ async function collectSelection() {
 
 async function pasteIntoChatGPT(message) {
     let tabs = await chrome.tabs.query({ url: "https://chatgpt.com/*" });
-
+    
    
     chrome.scripting.executeScript({
         target: { tabId: tabs[0].id }, 
         func: (msg) => {
+            //let form = document.querySelector("form.w-full");
+
             const textArea = document.getElementById('prompt-textarea');
+            console.log(textArea)      
+
             if (textArea) {
-                textArea.innerHTML = msg; 
-                textArea.focus();
+                //textArea.innerHTML = msg; 
+                //textArea.focus();
+                let enterEvent = new KeyboardEvent('keydown', {
+                    key: 'Enter',
+                    code: 'Enter',
+                    keyCode: 13,
+                    which: 13,
+                    bubbles: true,
+                    cancelable: true,
+                });
+        
+                textArea.dispatchEvent(enterEvent)
+
             } else {
                 console.error("Text area not found");  
             }
@@ -56,11 +71,11 @@ async function pasteIntoChatGPT(message) {
 
 
 
+
 const delay = ms => new Promise(res => setTimeout(res, ms));
-const display = document.getElementById("display");
 let value = 'hello'; 
 
 document.getElementById("load").addEventListener("click", async() => {
-    result = await collectSelection(value)
+    result = await collectSelection()
     pasteIntoChatGPT(result)
 });
