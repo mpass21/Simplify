@@ -12,24 +12,27 @@ function returnSelection() {
 }
 
 async function collectSelection() {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    return new Promise((resolve) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs.length === 0) {
+            resolve('no active tab')
             return;
         }
 
         chrome.scripting.executeScript({
             target: { tabId: tabs[0].id },
             func: returnSelection
-        }, (results) => {
-            if (chrome.runtime.lastError) {
-                console.error("Failed to execute script:", chrome.runtime.lastError);
-                return;
-            }
-            const selection = results[0].result
-            display.innerText = selection || "No text selected";
-            value = selection || "No text selected"
+            }, (results) => {
+                if (chrome.runtime.lastError) {
+                    console.error("Failed to execute script:", chrome.runtime.lastError);
+                    resolve('failed to execute')
+                    return;
+                }
+                const selection = results[0].result
+                resolve(selection || "No text selected")
+            }); 
         });
-    });
+    })
 }
 
 async function pasteIntoChatGPT(message) {
@@ -47,13 +50,9 @@ async function pasteIntoChatGPT(message) {
                 console.error("Text area not found");  
             }
         },
-        args: [message] 
-   
+        args: [message]    
     })
 }
-
-
-
 
 
 
@@ -61,8 +60,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 const display = document.getElementById("display");
 let value = 'hello'; 
 
-document.getElementById("load").addEventListener("click", () => {
-    collectSelection(value)
-    //pasteIntoChatGPT(value)
-    //console.log('finished attempt to paste into chatgpt')
+document.getElementById("load").addEventListener("click", async() => {
+    result = await collectSelection(value)
+    pasteIntoChatGPT(result)
 });
